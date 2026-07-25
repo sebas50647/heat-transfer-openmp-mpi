@@ -29,9 +29,9 @@ bool HeatDistributionSimulator::nextStep() {
   Plate<double> prev = *this->plate;
   int cells = this->plate->getColumns() * this->plate->getRows();
   bool localResult = true;
+  this->step++;
 #pragma omp parallel for reduction(&& : localResult) num_threads(this->numThreads)
   for (int i = 0; i < cells; i++) {
-  this->step++;
     int c = prev.columnAtIndex(i);
     int r = prev.rowAtIndex(i);
     double val = prev.getValueAt(c, r);
