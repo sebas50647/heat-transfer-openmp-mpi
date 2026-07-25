@@ -111,7 +111,7 @@ std::vector<T> Plate<T>::getAdjacentValuesAt(uint64_t column, uint64_t row) cons
 
 template <typename T>
 uint64_t Plate<T>::indexOf(uint64_t column, uint64_t row) const {
-    return (column / this->getColumns()) + row;
+    return row * this->getColumns() + column;
 }
 
 template <typename T>
