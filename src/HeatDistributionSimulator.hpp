@@ -15,8 +15,8 @@ class HeatDistributionSimulator {
   double sensitivity;   ///< Sensitivity threshold for temperature changes.
   double thermalDiff;   ///< Thermal diffusion coefficient.
   int step = 0;         ///< Current simulation step.
-  int stepDuration;     ///< Duration of each simulation step.
-  int cellHeight;       ///< Height of each cell in the grid.
+  double stepDuration;  ///< Duration of each simulation step.
+  double cellHeight;    ///< Height of each cell in the grid.
   int numThreads;       ///< Number of threads to use for parallel computation.
 
  public:
