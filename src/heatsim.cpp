@@ -90,6 +90,7 @@ int main(int argc, char *argv[]) {
 
   // Broadcast the number of jobs to all processes
   MPI_Bcast(&num_jobs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&num_threads, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   // Broadcast just the primitive job parameters to all processes
   std::vector<JobDescriptor> descriptors(num_jobs);
