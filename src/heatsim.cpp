@@ -7,6 +7,47 @@
 #include "HeatDistributionSimulator.hpp"
 #include "Job.hpp"
 
+namespace {
+
+// Only primitive fields travel over MPI. Job itself holds a std::string
+// and a raw double*, neither of which are meaningful once copied as raw
+// bytes into another process's address space.
+struct JobDescriptor {
+  uint64_t rows = 0;
+  uint64_t cols = 0;
+  double stepDuration = 0;
+  double thermalDiff = 0;
+  double cellHeight = 0;
+  double sensitivity = 0;
+};
+
+JobDescriptor toDescriptor(const Job &job) {
+  JobDescriptor d;
+  d.rows = job.getRows();
+  d.cols = job.getColumns();
+  d.stepDuration = job.getStepDuration();
+  d.thermalDiff = job.getThermalDiffusion();
+  d.cellHeight = job.getCellHeight();
+  d.sensitivity = job.getSensitivity();
+  return d;
+}
+
+// Splits jobs into contiguous ranges by count, same partition the old code
+// used for its loop bounds.
+std::vector<int> assignJobsByCount(int numJobs, int numRanks) {
+  std::vector<int> owner(numJobs);
+  int perRank = numJobs / numRanks;
+  int remainder = numJobs % numRanks;
+  int idx = 0;
+  for (int rank = 0; rank < numRanks; rank++) {
+    int count = perRank + (rank < remainder ? 1 : 0);
+    for (int k = 0; k < count; k++) owner[idx++] = rank;
+  }
+  return owner;
+}
+
+}  // namespace
+
 int main(int argc, char *argv[]) {
   MPI_Init(&argc, &argv);  // Initialize the MPI environment
 
@@ -38,61 +79,89 @@ int main(int argc, char *argv[]) {
   // Broadcast the number of jobs to all processes
   MPI_Bcast(&num_jobs, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  // Resize the jobs vector on all processes
-  jobs.resize(num_jobs);
-
-  // Broadcast the job data to all processes
-  Job brodJobs[num_jobs];
-  double *matrixes[num_jobs];
-  for (int i = 0; i < num_jobs; i++) {
-    brodJobs[i] = jobs[i];
-    MPI_Bcast(brodJobs + i, sizeof(Job), MPI_BYTE, 0, MPI_COMM_WORLD);
-
-    uint64_t size = brodJobs[i].getColumns() * brodJobs[i].getRows();
-    if (rank == 0) {
-      matrixes[i] = jobs[i].getTemperatures();
-    } else {
-      matrixes[i] = new double[size];
-    }
-    MPI_Bcast(matrixes[i], size * sizeof(double), MPI_BYTE, 0, MPI_COMM_WORLD);
+  // Broadcast just the primitive job parameters to all processes
+  std::vector<JobDescriptor> descriptors(num_jobs);
+  if (rank == 0) {
+    for (int i = 0; i < num_jobs; i++) descriptors[i] = toDescriptor(jobs[i]);
   }
-  MPI_Bcast(jobs.data(), num_jobs * sizeof(Job), MPI_BYTE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(descriptors.data(),
+            static_cast<int>(num_jobs * sizeof(JobDescriptor)), MPI_BYTE, 0,
+            MPI_COMM_WORLD);
 
-  // Distribute jobs among processes
-  int jobs_per_proc = num_jobs / size;
-  int remainder = num_jobs % size;
-  int start_idx = rank * jobs_per_proc + std::min(rank, remainder);
-  int end_idx = start_idx + jobs_per_proc + (rank < remainder);
+  std::vector<int> ownerOfJob = assignJobsByCount(num_jobs, size);
 
-  std::vector<Job> results;
+  // Send each plate only to the rank that will simulate it, instead of
+  // broadcasting every matrix to every process.
+  const int kMatrixTag = 0;
+  std::vector<double *> localMatrix(num_jobs, nullptr);
+  for (int i = 0; i < num_jobs; i++) {
+    int cells = static_cast<int>(descriptors[i].rows * descriptors[i].cols);
+    int owner = ownerOfJob[i];
 
-  for (int i = start_idx; i < end_idx; i++) {
-    Job &j = brodJobs[i];
+    if (rank == 0 && owner == 0) {
+      localMatrix[i] = jobs[i].getTemperatures();
+    } else if (rank == 0) {
+      MPI_Send(jobs[i].getTemperatures(), cells, MPI_DOUBLE, owner,
+                kMatrixTag, MPI_COMM_WORLD);
+    } else if (rank == owner) {
+      localMatrix[i] = new double[cells];
+      MPI_Recv(localMatrix[i], cells, MPI_DOUBLE, 0, kMatrixTag,
+                MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+  }
 
-    HeatDistributionSimulator sim(
-        j.getColumns(), j.getRows(), j.getCellHeight(), j.getThermalDiffusion(),
-        j.getSensitivity(), j.getStepDuration(), matrixes[i], num_threads);
+  std::vector<int> steps(num_jobs, 0);
+  std::vector<int> timeTaken(num_jobs, 0);
+
+  for (int i = 0; i < num_jobs; i++) {
+    if (ownerOfJob[i] != rank) continue;
+
+    const JobDescriptor &d = descriptors[i];
+    HeatDistributionSimulator sim(d.cols, d.rows, d.cellHeight, d.thermalDiff,
+                                   d.sensitivity, d.stepDuration,
+                                   localMatrix[i], num_threads);
 
     sim.run();
 
-    j.setSteps(sim.getCurrentStep());
-    j.setTimeTaken(sim.getPassedTime());
+    steps[i] = sim.getCurrentStep();
+    timeTaken[i] = sim.getPassedTime();
 
-    results.push_back(j);
+    if (rank != 0) {
+      int cells = static_cast<int>(d.rows * d.cols);
+      MPI_Send(localMatrix[i], cells, MPI_DOUBLE, 0, kMatrixTag,
+                MPI_COMM_WORLD);
+      delete[] localMatrix[i];
+    }
   }
 
-  // Gather results from all processes
-  Job *all_results = new Job[num_jobs];
+  // Pull back the final plate for jobs that ran on another rank.
+  if (rank == 0) {
+    for (int i = 0; i < num_jobs; i++) {
+      if (ownerOfJob[i] == 0) continue;
+      int cells = static_cast<int>(descriptors[i].rows * descriptors[i].cols);
+      MPI_Recv(jobs[i].getTemperatures(), cells, MPI_DOUBLE, ownerOfJob[i],
+               kMatrixTag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+  }
 
-  MPI_Gather(results.data(), results.size() * sizeof(Job), MPI_BYTE,
-             all_results, results.size() * sizeof(Job), MPI_BYTE, 0,
+  // steps/timeTaken are zero everywhere except at the owning rank, so a
+  // sum-reduce collects them onto rank 0 without any unsafe byte copying.
+  std::vector<int> globalSteps(num_jobs, 0);
+  std::vector<int> globalTimeTaken(num_jobs, 0);
+  MPI_Reduce(steps.data(), globalSteps.data(), num_jobs, MPI_INT, MPI_SUM, 0,
              MPI_COMM_WORLD);
+  MPI_Reduce(timeTaken.data(), globalTimeTaken.data(), num_jobs, MPI_INT,
+             MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (rank == 0) {
+    for (int i = 0; i < num_jobs; i++) {
+      jobs[i].setSteps(globalSteps[i]);
+      jobs[i].setTimeTaken(globalTimeTaken[i]);
+    }
+
     JobWriter writer(argv[1]);
-    writer.setJobs(all_results, num_jobs);
+    writer.setJobs(jobs.data(), num_jobs);
     writer.write();
-    // delete all_results;
   }
 
   MPI_Finalize();  // Finalize the MPI environment
