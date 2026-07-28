@@ -1,7 +1,9 @@
 // Copyright 2024 mas cquest que nunca
 #include <omp.h>
 #include <mpi.h>
+#include <algorithm>
 #include <iostream>
+#include <numeric>
 #include <vector>
 
 #include "HeatDistributionSimulator.hpp"
@@ -32,16 +34,26 @@ JobDescriptor toDescriptor(const Job &job) {
   return d;
 }
 
-// Splits jobs into contiguous ranges by count, same partition the old code
-// used for its loop bounds.
-std::vector<int> assignJobsByCount(int numJobs, int numRanks) {
-  std::vector<int> owner(numJobs);
-  int perRank = numJobs / numRanks;
-  int remainder = numJobs % numRanks;
-  int idx = 0;
-  for (int rank = 0; rank < numRanks; rank++) {
-    int count = perRank + (rank < remainder ? 1 : 0);
-    for (int k = 0; k < count; k++) owner[idx++] = rank;
+// Greedy longest-processing-time-first assignment: bigger plates get
+// placed first, always onto whichever rank currently holds the least
+// total work. Every rank computes this locally from the same broadcast
+// descriptors, so no extra communication is needed to agree on it.
+std::vector<int> assignJobsBySize(const std::vector<JobDescriptor> &jobs,
+                                   int numRanks) {
+  std::vector<int> order(jobs.size());
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int a, int b) {
+    return jobs[a].rows * jobs[a].cols > jobs[b].rows * jobs[b].cols;
+  });
+
+  std::vector<uint64_t> loadPerRank(numRanks, 0);
+  std::vector<int> owner(jobs.size());
+  for (int idx : order) {
+    int lightest = static_cast<int>(
+        std::min_element(loadPerRank.begin(), loadPerRank.end()) -
+        loadPerRank.begin());
+    owner[idx] = lightest;
+    loadPerRank[lightest] += jobs[idx].rows * jobs[idx].cols;
   }
   return owner;
 }
@@ -88,7 +100,7 @@ int main(int argc, char *argv[]) {
             static_cast<int>(num_jobs * sizeof(JobDescriptor)), MPI_BYTE, 0,
             MPI_COMM_WORLD);
 
-  std::vector<int> ownerOfJob = assignJobsByCount(num_jobs, size);
+  std::vector<int> ownerOfJob = assignJobsBySize(descriptors, size);
 
   // Send each plate only to the rank that will simulate it, instead of
   // broadcasting every matrix to every process.
