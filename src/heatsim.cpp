@@ -81,13 +81,13 @@ int main(int argc, char *argv[]) {
     if (argc >= 3) {
       num_threads = std::stoi(argv[2]);  // Use specified number of threads
     }
-
+    // Read jobs from the specified file and store them in the jobs vector
     JobReader reader(argv[1]);
     reader.read();
     jobs = reader.getJobs();
-    num_jobs = jobs.size();
+    num_jobs = static_cast<int>(jobs.size());
+  
   }
-
   // Broadcast the number of jobs to all processes
   MPI_Bcast(&num_jobs, 1, MPI_INT, 0, MPI_COMM_WORLD);
   MPI_Bcast(&num_threads, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -106,19 +106,19 @@ int main(int argc, char *argv[]) {
   // Send each plate only to the rank that will simulate it, instead of
   // broadcasting every matrix to every process.
   const int kMatrixTag = 0;
-  std::vector<double *> localMatrix(num_jobs, nullptr);
+  std::vector<std::vector<double>> localMatrix(num_jobs);
   for (int i = 0; i < num_jobs; i++) {
     int cells = static_cast<int>(descriptors[i].rows * descriptors[i].cols);
     int owner = ownerOfJob[i];
 
     if (rank == 0 && owner == 0) {
-      localMatrix[i] = jobs[i].getTemperatures();
+      // Job 0 keeps its own matrix pointer; no local allocation needed.
     } else if (rank == 0) {
       MPI_Send(jobs[i].getTemperatures(), cells, MPI_DOUBLE, owner,
                 kMatrixTag, MPI_COMM_WORLD);
     } else if (rank == owner) {
-      localMatrix[i] = new double[cells];
-      MPI_Recv(localMatrix[i], cells, MPI_DOUBLE, 0, kMatrixTag,
+      localMatrix[i].resize(cells);
+      MPI_Recv(localMatrix[i].data(), cells, MPI_DOUBLE, 0, kMatrixTag,
                 MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
   }
@@ -130,9 +130,16 @@ int main(int argc, char *argv[]) {
     if (ownerOfJob[i] != rank) continue;
 
     const JobDescriptor &d = descriptors[i];
+    double *initialTemperatures = nullptr;
+    if (rank == 0 && ownerOfJob[i] == 0) {
+      initialTemperatures = jobs[i].getTemperatures();
+    } else {
+      initialTemperatures = localMatrix[i].data();
+    }
+
     HeatDistributionSimulator sim(d.cols, d.rows, d.cellHeight, d.thermalDiff,
                                    d.sensitivity, d.stepDuration,
-                                   localMatrix[i], num_threads);
+                                   initialTemperatures, num_threads);
 
     sim.run();
 
@@ -141,9 +148,8 @@ int main(int argc, char *argv[]) {
 
     if (rank != 0) {
       int cells = static_cast<int>(d.rows * d.cols);
-      MPI_Send(localMatrix[i], cells, MPI_DOUBLE, 0, kMatrixTag,
+      MPI_Send(localMatrix[i].data(), cells, MPI_DOUBLE, 0, kMatrixTag,
                 MPI_COMM_WORLD);
-      delete[] localMatrix[i];
     }
   }
 
