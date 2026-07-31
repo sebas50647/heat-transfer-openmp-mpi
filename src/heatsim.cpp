@@ -2,8 +2,10 @@
 #include <omp.h>
 #include <mpi.h>
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <numeric>
+#include <string>
 #include <vector>
 
 #include "HeatDistributionSimulator.hpp"
@@ -71,18 +73,52 @@ int main(int argc, char *argv[]) {
   int num_jobs = 0;
   int num_threads =
       omp_get_max_threads();  // Default to maximum available threads
+  std::filesystem::path inputDir;
+  std::filesystem::path outputDir;
 
   if (rank == 0) {
     if (argc < 2) {
-      std::cout << "Usage: " << argv[0] << " <job file>\n";
+      std::cout << "Usage: " << argv[0]
+                << " <job file> [input_dir] [output_dir] [num_threads]\n";
       MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    if (argc >= 3) {
-      num_threads = std::stoi(argv[2]);  // Use specified number of threads
+    auto tryParseInt = [](const char *value, int &parsed) {
+      try {
+        size_t consumed = 0;
+        parsed = std::stoi(value, &consumed);
+        return value[consumed] == '\0';
+      } catch (...) {
+        return false;
+      }
+    };
+
+    std::vector<std::filesystem::path> directories;
+    for (int i = 2; i < argc; ++i) {
+      int parsedThreads = 0;
+      if (tryParseInt(argv[i], parsedThreads)) {
+        num_threads = parsedThreads;
+        continue;
+      }
+
+      directories.emplace_back(argv[i]);
     }
+
+    if (directories.size() > 2) {
+      std::cout << "Usage: " << argv[0]
+                << " <job file> [input_dir] [output_dir] [num_threads]\n";
+      MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    if (!directories.empty()) {
+      inputDir = directories[0];
+    }
+    if (directories.size() >= 2) {
+      outputDir = directories[1];
+    }
+
     // Read jobs from the specified file and store them in the jobs vector
-    JobReader reader(argv[1]);
+    JobReader reader(argv[1], inputDir);
     reader.read();
     jobs = reader.getJobs();
     num_jobs = static_cast<int>(jobs.size());
@@ -178,7 +214,7 @@ int main(int argc, char *argv[]) {
       jobs[i].setTimeTaken(globalTimeTaken[i]);
     }
 
-    JobWriter writer(argv[1]);
+    JobWriter writer(argv[1], outputDir);
     writer.setJobs(jobs.data(), num_jobs);
     writer.write();
   }

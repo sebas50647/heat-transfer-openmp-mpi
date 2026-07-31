@@ -3,6 +3,7 @@
 #define JOB_HPP
 
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -151,6 +152,7 @@ class Job {
 class JobReader {
  private:
   std::string filePath;  ///< Path to the file containing job data.
+  std::filesystem::path inputDir;  ///< Base directory for input matrices.
   std::vector<Job> jobs;  ///< List of jobs.
 
   /**
@@ -169,6 +171,13 @@ class JobReader {
    * @param path Path to the file containing job data.
    */
   explicit JobReader(std::string path);
+
+  /**
+   * @brief Parameterized constructor.
+   * @param path Path to the file containing job data.
+   * @param inputDir Base directory for matrix files.
+   */
+  JobReader(std::string path, std::filesystem::path inputDir);
 
   /**
    * @brief Destructor.
@@ -194,6 +203,7 @@ class JobReader {
 class JobWriter {
  private:
   std::string filePath;  ///< Path to the file to write job data.
+  std::filesystem::path outputDir;  ///< Base directory for output files.
   Job *jobs;            ///< Pointer to the list of jobs.
   int numJobs;          ///< Number of jobs.
 
@@ -220,6 +230,13 @@ class JobWriter {
    * @param path Path to the file to write job data.
    */
   explicit JobWriter(std::string path);
+
+  /**
+   * @brief Parameterized constructor.
+   * @param path Path to the file to write job data.
+   * @param outputDir Base directory for output files.
+   */
+  JobWriter(std::string path, std::filesystem::path outputDir);
 
   /**
    * @brief Parameterized constructor.

@@ -5,7 +5,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 Job::Job() {}
@@ -74,6 +76,9 @@ void Job::setTemperatures(double *temps) { this->temps = temps; }
 
 JobReader::~JobReader() {}
 
+JobReader::JobReader(std::string path, std::filesystem::path inputDir)
+  : filePath(path), inputDir(std::move(inputDir)) {}
+
 double *JobReader::readMatrix(const std::string &matrixFilePath, uint64_t &rows,
                               uint64_t &cols) {
   std::ifstream infile(matrixFilePath, std::ios::binary);
@@ -116,11 +121,13 @@ void JobReader::read() {
       continue;
     }
 
-    std::filesystem::path path = this->filePath;
-    std::string relativeMatrixPath =
-        path.parent_path().string() + '/' + matrixFilePath;
+    std::filesystem::path relativeMatrixPath = this->inputDir / matrixFilePath;
+    if (this->inputDir.empty()) {
+      std::filesystem::path path = this->filePath;
+      relativeMatrixPath = path.parent_path() / matrixFilePath;
+    }
 
-    temps = readMatrix(relativeMatrixPath, rows, cols);
+    temps = readMatrix(relativeMatrixPath.string(), rows, cols);
     if (!temps) {
       continue;
     }
@@ -138,6 +145,9 @@ std::vector<Job> &JobReader::getJobs() { return jobs; }
 
 JobWriter::JobWriter(std::string path) : filePath(path), jobs() {}
 
+JobWriter::JobWriter(std::string path, std::filesystem::path outputDir)
+  : filePath(path), outputDir(std::move(outputDir)), jobs() {}
+
 void JobWriter::setJobs(Job *jobs, int numJobs) {
   this->jobs = jobs;
   this->numJobs = numJobs;
@@ -145,10 +155,24 @@ void JobWriter::setJobs(Job *jobs, int numJobs) {
 
 std::string JobWriter::format_time(const time_t seconds) {
   char text[48];  // YYYY/MM/DD hh:mm:ss
-  const std::tm &gmt = *std::gmtime(&seconds);
-  snprintf(text, sizeof text, "%04d/%02d/%02d\t%02d:%02d:%02d",
-           gmt.tm_year - 70, gmt.tm_mon, gmt.tm_mday - 1, gmt.tm_hour,
-           gmt.tm_min, gmt.tm_sec);
+  time_t days = seconds / 86400;
+  time_t remaining = seconds % 86400;
+  if (remaining < 0) {
+    remaining += 86400;
+    --days;
+  }
+
+  const int year = static_cast<int>(days / 360) + 1970;
+  days %= 360;
+  const int month = static_cast<int>(days / 30) + 1;
+  const int day = static_cast<int>(days % 30) + 1;
+  const int hour = static_cast<int>(remaining / 3600);
+  remaining %= 3600;
+  const int minute = static_cast<int>(remaining / 60);
+  const int second = static_cast<int>(remaining % 60);
+
+  snprintf(text, sizeof text, "%04d/%02d/%02d\t%02d:%02d:%02d", year,
+           month, day, hour, minute, second);
   return text;
 }
 
@@ -169,24 +193,25 @@ void JobWriter::writeMatrix(const std::string &filePath, double *matrix,
 }
 
 void JobWriter::write() {
-  // Crear la carpeta tsv si no existe
-  std::filesystem::path dirPath = "tsv";
+  std::filesystem::path dirPath = this->outputDir.empty()
+                                      ? std::filesystem::path("tsv")
+                                      : this->outputDir;
   if (!std::filesystem::exists(dirPath)) {
-    std::filesystem::create_directory(dirPath);
+    std::filesystem::create_directories(dirPath);
   }
 
-  // Nombre del archivo único para todos los trabajos
-  std::string dataFileName = dirPath.string() + "/jobs.tsv";
-
-  // Escribir la información de todos los trabajos en un solo archivo
-  std::ofstream outFile(dataFileName);
-  if (!outFile) {
-    std::cerr << "Cannot open file: " << dataFileName << std::endl;
-    return;
-  }
-
-  // Paraleliza el bucle de escritura de los datos de cada trabajo
   for (int i = 0; i < this->numJobs; ++i) {
+    const int jobNumber = i + 1;
+    std::ostringstream jobId;
+    jobId << std::setw(3) << std::setfill('0') << jobNumber;
+
+    const std::string jobStem = "job" + jobId.str();
+    std::filesystem::path jobFileName = dirPath / (jobStem + ".tsv");
+    const std::string inputPlateStem =
+        std::filesystem::path(this->jobs[i].getMatrixPath()).stem().string();
+    std::filesystem::path matrixFileName =
+        dirPath / (inputPlateStem + "-" + std::to_string(i) + ".bin");
+
     std::ostringstream oss;
 
     Job &job = this->jobs[i];
@@ -195,15 +220,16 @@ void JobWriter::write() {
         << job.getSensitivity() << "\t" << job.getSteps() << "\t"
         << format_time(job.getSteps() * job.getStepDuration()) << "\n";
 
-    // Escribir la matriz en un archivo separado dentro de la carpeta tsv
-    std::string equilibriumMatrixFileName =
-        dirPath.string() + "/" + job.getMatrixPath();
-    writeMatrix(equilibriumMatrixFileName, job.getTemperatures(), job.getRows(),
-                job.getColumns());
+    std::ofstream outFile(jobFileName);
+    if (!outFile) {
+      std::cerr << "Cannot open file: " << jobFileName.string() << std::endl;
+      continue;
+    }
 
-    // Escritura del contenido en el archivo de trabajos
     outFile << oss.str();
-  }
+    outFile.close();
 
-  outFile.close();
+    writeMatrix(matrixFileName.string(), job.getTemperatures(), job.getRows(),
+                job.getColumns());
+  }
 }
