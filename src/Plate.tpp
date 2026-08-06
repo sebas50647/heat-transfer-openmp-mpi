@@ -43,25 +43,45 @@ std::vector<PlateCell<T>> PlateCell<T>::getAdjacents() const {
 
 // Plate implementation
 template <typename T>
-Plate<T>::Plate(const uint64_t &rows, const uint64_t &columns, T *init) : rows(rows), columns(columns), matrix(init) {}
-    
+Plate<T>::Plate(const uint64_t &rows, const uint64_t &columns, T *init)
+    : rows(rows), columns(columns), matrix(init), ownsMemory(false) {}
+
 template <typename T>
-Plate<T>::Plate(const uint64_t &rows, const uint64_t &columns) : Plate(rows, columns, new T[rows*columns]) {}
+Plate<T>::Plate(const uint64_t &rows, const uint64_t &columns) : Plate(rows, columns, new T[rows*columns]) {
+    this->ownsMemory = true;
+}
 
 template <typename T>
 Plate<T>::Plate(const Plate<T> &other) : Plate(other.getRows(), other.getColumns(), new T[other.getSize()]) {
+    this->ownsMemory = true;
     for (uint64_t i = 0; i < other.getSize(); i++) {
         this->matrix[i] = other.matrix[i];
     }
 }
 
 template <typename T>
-Plate<T>::~Plate() {
-    /*
-    for(uint64_t i = 0; i < columns; i++) {
-        delete[] this->matrix[i];
+Plate<T> &Plate<T>::operator=(const Plate<T> &other) {
+    if (this == &other) {
+        return *this;
     }
-    delete[] this->matrix;*/
+    if (this->ownsMemory) {
+        delete[] this->matrix;
+    }
+    this->rows = other.rows;
+    this->columns = other.columns;
+    this->matrix = new T[other.getSize()];
+    this->ownsMemory = true;
+    for (uint64_t i = 0; i < other.getSize(); i++) {
+        this->matrix[i] = other.matrix[i];
+    }
+    return *this;
+}
+
+template <typename T>
+Plate<T>::~Plate() {
+    if (this->ownsMemory) {
+        delete[] this->matrix;
+    }
 }
 
 template <typename T>
@@ -133,5 +153,12 @@ template <typename T>
 void Plate<T>::setAllTo(T value) {
     for (uint64_t i = 0; i < this->getSize(); ++i) {
         this->matrix[i] = value;
+    }
+}
+
+template <typename T>
+void Plate<T>::copyValuesFrom(const Plate<T> &other) {
+    for (uint64_t i = 0; i < this->getSize(); ++i) {
+        this->matrix[i] = other.matrix[i];
     }
 }

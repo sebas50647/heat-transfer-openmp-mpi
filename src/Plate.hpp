@@ -77,12 +77,14 @@ template <typename T> class Plate {
   uint64_t rows;    ///< Number of rows in the Plate.
   uint64_t columns;  ///< Number of columns in the Plate.
   T *matrix;        ///< array of elements.
+  bool ownsMemory;  ///< True if this Plate allocated matrix and must free it.
 
   uint64_t indexOf(uint64_t column, uint64_t row) const;
 
  public:
   /**
-   * @brief Constructs a Plate.
+   * @brief Constructs a Plate as a non-owning view over an existing array.
+   * The caller keeps ownership of init; this Plate will never free it.
    *
    * @param rows Number of rows.
    * @param columns Number of columns.
@@ -107,7 +109,18 @@ template <typename T> class Plate {
   Plate(const Plate<T> &other);
 
   /**
-   * @brief Destructor for Plate.
+   * @brief Copy-assignment operator. Always allocates its own buffer,
+   * so the assigned-to Plate owns its memory afterwards regardless of
+   * what it owned before.
+   *
+   * @param other The plate to copy from.
+   * @return Reference to this plate.
+   */
+  Plate<T> &operator=(const Plate<T> &other);
+
+  /**
+   * @brief Destructor for Plate. Frees the underlying array only if
+   * this Plate allocated it (see the non-owning-view constructor).
    */
   ~Plate();
 
@@ -199,6 +212,14 @@ template <typename T> class Plate {
    * @param value The value to set.
    */
   void setAllTo(T value);
+
+  /**
+   * @brief Copies cell values from another same-sized Plate in place,
+   * without reallocating or changing which buffer this Plate owns.
+   *
+   * @param other The plate to copy values from. Must have the same size.
+   */
+  void copyValuesFrom(const Plate<T> &other);
 };
 
 #include "Plate.tpp"
