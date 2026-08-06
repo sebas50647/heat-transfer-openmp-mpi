@@ -2,6 +2,7 @@
 #include "HeatDistributionSimulator.hpp"
 #include <omp.h>
 #include <cmath>
+#include <utility>
 
 double HeatDistributionSimulator::getSensitivity() { return this->sensitivity; }
 
@@ -26,22 +27,21 @@ int HeatDistributionSimulator::getPassedTime() {
 }
 
 bool HeatDistributionSimulator::nextStep() {
-  Plate<double> prev = *this->plate;
   int cells = this->plate->getColumns() * this->plate->getRows();
   bool localResult = true;
   this->step++;
 #pragma omp parallel for reduction(&& : localResult) num_threads(this->numThreads)
   for (int i = 0; i < cells; i++) {
-    int c = prev.columnAtIndex(i);
-    int r = prev.rowAtIndex(i);
-    double val = prev.getValueAt(c, r);
+    int c = this->plate->columnAtIndex(i);
+    int r = this->plate->rowAtIndex(i);
+    double val = this->plate->getValueAt(c, r);
 
-    if (prev.isBorderCell(c, r)) {
+    if (this->plate->isBorderCell(c, r)) {
       continue;
     }
 
     double distributed = -(4 * val);
-    for (double t : prev.getAdjacentValuesAt(c, r)) {
+    for (double t : this->plate->getAdjacentValuesAt(c, r)) {
       distributed += t;
     }
 
@@ -49,17 +49,21 @@ bool HeatDistributionSimulator::nextStep() {
     distributed = distributed / pow(this->cellHeight, 2);
     distributed += val;
 
-    this->plate->setValueAt(c, r, distributed);
+    this->scratch->setValueAt(c, r, distributed);
 
     if (abs(val - distributed) > this->sensitivity) {
       localResult = false;
     }
   }
 
+  std::swap(this->plate, this->scratch);
   return localResult;
 }
 
 void HeatDistributionSimulator::run() {
   while (!this->nextStep())
     ;
+  if (this->plate != this->externalView) {
+    this->externalView->copyValuesFrom(*this->plate);
+  }
 }

@@ -12,6 +12,10 @@
 class HeatDistributionSimulator {
  private:
   Plate<double> *plate;  ///< Pointer to the plate representing the heat grid.
+  Plate<double> *scratch;  ///< Buffer holding the state being computed.
+  Plate<double> *externalView;  ///< The Plate wrapping the caller's buffer;
+                                 ///< never reassigned, used to sync results
+                                 ///< back into it once the simulation ends.
   double sensitivity;   ///< Sensitivity threshold for temperature changes.
   double thermalDiff;   ///< Thermal diffusion coefficient.
   int step = 0;         ///< Current simulation step.
@@ -45,6 +49,9 @@ class HeatDistributionSimulator {
     } else {
       this->plate = new Plate<double>(rows, columns, initTemps);
     }
+    this->externalView = this->plate;
+    this->scratch = new Plate<double>(rows, columns);
+    this->scratch->copyValuesFrom(*this->plate);
   }
 
   /**
@@ -68,7 +75,10 @@ class HeatDistributionSimulator {
   /**
    * @brief Destructor.
    */
-  ~HeatDistributionSimulator() { delete this->plate; }
+  ~HeatDistributionSimulator() {
+    delete this->plate;
+    delete this->scratch;
+  }
 
   /**
    * @brief Gets the sensitivity threshold.
