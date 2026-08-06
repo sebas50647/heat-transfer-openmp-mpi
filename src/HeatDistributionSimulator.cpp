@@ -51,7 +51,7 @@ bool HeatDistributionSimulator::nextStep() {
 
     this->scratch->setValueAt(c, r, distributed);
 
-    if (abs(val - distributed) > this->sensitivity) {
+    if (std::fabs(val - distributed) > this->sensitivity) {
       localResult = false;
     }
   }
