@@ -29,6 +29,7 @@ Job::Job(const Job &other) {
   this->cellHeight = other.getCellHeight();
   this->temps = other.getTemperatures();
   this->steps = other.getSteps();
+  this->timeTaken = other.getTimeTaken();
   this->matrixPath = other.getMatrixPath();
 }
 
@@ -41,6 +42,7 @@ Job &Job::operator=(const Job &other) {
   this->cellHeight = other.getCellHeight();
   this->temps = other.getTemperatures();
   this->steps = other.getSteps();
+  this->timeTaken = other.getTimeTaken();
   this->matrixPath = other.getMatrixPath();
 
   return *this;
