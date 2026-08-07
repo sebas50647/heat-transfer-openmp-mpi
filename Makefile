@@ -115,6 +115,12 @@ tsan: debug
 ubsan: FLAGS += -fsanitize=undefined
 ubsan: debug
 
+# Plate comparison tool (tools/plate_diff.cpp). Kept outside SRC so it is
+# not swept into SOURCEX/OBJECTS and does not collide with heatsim's main().
+PLATEDIFF=$(BIN)/plate_diff
+debug: $(PLATEDIFF)
+release: $(PLATEDIFF)
+
 -include *.mk $(DEPENDS)
 .SECONDEXPANSION:
 
@@ -129,6 +135,9 @@ $(BUILD)/%.o: $(SRC)/%.c | $$(@D)/.
 # Compile C++ source file
 $(BUILD)/%.o: $(SRC)/%.cpp | $$(@D)/.
 	$(XC) -c $(FLAGX) $(INCLUDE) -MMD $< -o $@
+
+$(PLATEDIFF): tools/plate_diff.cpp | $$(@D)/.
+	$(XC) $(FLAGX) $< -o $@
 
 # Java Linker call. TODO(jhc): fallible main class detection
 %.jar: $(OBJECTJ) | $$(@D)/.	
@@ -272,6 +281,7 @@ help:
 	@echo "  lint       Check code style conformance using Cpplint"
 	@echo "  memcheck   Run executable for detecting memory errors with Valgrind"
 	@echo "  msan       Build for detecting uninitialized memory usage"
+	@echo "  plate_diff Build the plate comparison tool: bin/plate_diff f1 f2 eps"
 	@echo "  <L>out     Generate test case output using language L: cpp|java|py"
 	@echo "  project=L  Create files for languages L: c|cpp|java|py|design"
 	@echo "  release    Build an optimized executable"
