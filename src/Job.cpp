@@ -207,16 +207,14 @@ void JobWriter::write() {
     std::ostringstream jobId;
     jobId << std::setw(3) << std::setfill('0') << jobNumber;
 
-    const std::string jobStem = "job" + jobId.str();
-    std::filesystem::path jobFileName = dirPath / (jobStem + ".tsv");
-    const std::string inputPlateStem =
-        std::filesystem::path(this->jobs[i].getMatrixPath()).stem().string();
+    Job &job = this->jobs[i];
+
+    std::filesystem::path jobFileName = dirPath / ("job" + jobId.str() + ".tsv");
     std::filesystem::path matrixFileName =
-        dirPath / (inputPlateStem + "-" + std::to_string(i) + ".bin");
+        dirPath / ("plate" + jobId.str() + "-" + std::to_string(job.getSteps()) +
+                   ".bin");
 
     std::ostringstream oss;
-
-    Job &job = this->jobs[i];
     oss << job.getMatrixPath() << "\t" << job.getStepDuration() << "\t"
         << job.getThermalDiffusion() << "\t" << job.getCellHeight() << "\t"
         << job.getSensitivity() << "\t" << job.getSteps() << "\t"
