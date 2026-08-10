@@ -160,6 +160,9 @@ $(BUILD)/%.class: $(SRC)/%.java | $$(@D)/.
 .PHONY: test doc lint run memcheck helgrind clean instdeps update tc project
 test: SHELL:=/bin/bash
 test: $(TARGETS) $(TESTOUT)
+test: $(PLATEDIFF)
+	bash tests/run_tests.sh
+	bash tests/run_integration_tests.sh
 
 # TODO(any): Remove redundancy
 exe/output%.txt: $(TESTS)/input%.txt $(TESTS)/output%.txt

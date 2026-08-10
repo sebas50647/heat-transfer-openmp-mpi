@@ -5,3 +5,5 @@
 \test
 \tsv
 *.bin
+!tests/fixtures/**/*.bin
+!tests/expected/**/*.bin
