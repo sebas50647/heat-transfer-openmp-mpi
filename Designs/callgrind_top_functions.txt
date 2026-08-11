@@ -1,0 +1,104 @@
+--------------------------------------------------------------------------------
+Profile data file 'callgrind.out' (creator: callgrind-3.26.0)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 371787920
+Trigger: Program termination
+Profiled target:  /home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi /home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bench/calibjob.txt /home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bench /tmp/callgrindout 1 (PID 16811, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       99
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+Ir                     
+--------------------------------------------------------------------------------
+2,773,700,449 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+Ir                    file:function
+--------------------------------------------------------------------------------
+273,829,248 ( 9.87%)  ???:void std::vector<double, std::allocator<double> >::_M_realloc_append<double>(double&&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+149,333,240 ( 5.38%)  ???:HeatDistributionSimulator::nextStep() [clone ._omp_fn.0] [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+132,765,696 ( 4.79%)  ???:std::vector<double, std::allocator<double> >::size() const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+128,616,768 ( 4.64%)  ???:std::vector<double, std::allocator<double> >::_S_max_size(std::allocator<double> const&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+120,318,912 ( 4.34%)  ???:std::vector<double, std::allocator<double> >::_M_check_len(unsigned long, char const*) const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+116,169,984 ( 4.19%)  ???:std::vector<double, std::allocator<double> >::end() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+105,106,176 ( 3.79%)  ???:std::vector<double, std::allocator<double> >::back() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 92,659,392 ( 3.34%)  ???:double& std::vector<double, std::allocator<double> >::emplace_back<double>(double&&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 85,744,512 ( 3.09%)  ???:std::vector<double, std::allocator<double> >::empty() const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 80,176,896 ( 2.89%)  ???:Plate<double>::getValueAt(unsigned long, unsigned long) const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 69,713,140 ( 2.51%)  ./malloc/./malloc/malloc.c:free [/usr/lib/x86_64-linux-gnu/libc.so.6]
+ 66,839,040 ( 2.41%)  ???:Plate<double>::indexOf(unsigned long, unsigned long) const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 63,616,896 ( 2.29%)  ???:Plate<double>::getAdjacentValuesAt(unsigned long, unsigned long) const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 60,316,933 ( 2.17%)  ./malloc/./malloc/malloc.c:malloc [/usr/lib/x86_64-linux-gnu/libc.so.6]
+ 58,165,352 ( 2.10%)  ???:unsigned long const& std::min<unsigned long>(unsigned long const&, unsigned long const&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 58,084,992 ( 2.09%)  ???:std::vector<double, std::allocator<double> >::end() const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 55,319,040 ( 1.99%)  ???:std::vector<double, std::allocator<double> >::begin() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 55,319,040 ( 1.99%)  ???:std::vector<double, std::allocator<double> >::begin() const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 53,936,064 ( 1.94%)  ???:std::enable_if<std::__is_bitwise_relocatable<double, void>::value, double*>::type std::__relocate_a_1<double, double>(double*, double*, double*, std::allocator<double>&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 51,861,612 ( 1.87%)  ???:std::_Vector_base<double, std::allocator<double> >::_M_deallocate(double*, unsigned long) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 51,170,112 ( 1.84%)  ./math/../sysdeps/ieee754/dbl-64/e_pow.c:__ieee754_pow_fma [/usr/lib/x86_64-linux-gnu/libm.so.6]
+ 49,787,136 ( 1.79%)  ???:std::__new_allocator<double>::allocate(unsigned long, void const*) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 49,787,136 ( 1.79%)  ???:std::vector<double, std::allocator<double> >::max_size() const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 45,638,208 ( 1.65%)  ???:double* std::__relocate_a<double*, double*, std::allocator<double> >(double*, double*, double*, std::allocator<double>&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 45,638,208 ( 1.65%)  ???:std::_Vector_base<double, std::allocator<double> >::_M_allocate(unsigned long) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 45,020,104 ( 1.62%)  ???:Plate<double>::getColumns() const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 44,255,232 ( 1.60%)  ???:std::vector<double, std::allocator<double> >::push_back(double&&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 39,414,816 ( 1.42%)  ???:std::vector<double, std::allocator<double> >::_Guard_alloc::_Guard_alloc(double*, unsigned long, std::_Vector_base<double, std::allocator<double> >&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 37,340,352 ( 1.35%)  ???:std::vector<double, std::allocator<double> >::_Guard_alloc::~_Guard_alloc() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 33,215,472 ( 1.20%)  ???:operator new(unsigned long) [/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.35]
+ 33,191,424 ( 1.20%)  ???:std::vector<double, std::allocator<double> >::_S_relocate(double*, double*, double*, std::allocator<double>&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 31,116,960 ( 1.12%)  ???:std::__new_allocator<double>::deallocate(double*, unsigned long) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 29,734,028 ( 1.07%)  ???:unsigned long const& std::max<unsigned long>(unsigned long const&, unsigned long const&) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 29,042,496 ( 1.05%)  ???:std::_Vector_base<double, std::allocator<double> >::_M_get_Tp_allocator() const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 22,127,728 ( 0.80%)  ???:operator new(unsigned long, void*) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 19,361,671 ( 0.70%)  ???:std::_Vector_base<double, std::allocator<double> >::_M_get_Tp_allocator() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 18,670,203 ( 0.67%)  ???:std::vector<double, std::allocator<double> >::~vector() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 18,670,176 ( 0.67%)  ???:Plate<double>::setValueAt(unsigned long, unsigned long, double) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 17,287,225 ( 0.62%)  ???:std::_Vector_base<double, std::allocator<double> >::~_Vector_base() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 17,070,691 ( 0.62%)  ./string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:__memcpy_avx_unaligned_erms [/usr/lib/x86_64-linux-gnu/libc.so.6]
+ 16,416,432 ( 0.59%)  ???:Plate<double>::isBorderCell(unsigned long, unsigned long) const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 14,521,248 ( 0.52%)  ./math/./w_pow_template.c:pow@@GLIBC_2.29 [/usr/lib/x86_64-linux-gnu/libm.so.6]
+ 12,240,000 ( 0.44%)  ???:Plate<double>::columnAtIndex(unsigned long) const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 11,755,313 ( 0.42%)  ???:std::_Vector_base<double, std::allocator<double> >::_Vector_impl::_Vector_impl() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+ 10,800,000 ( 0.39%)  ???:Plate<double>::rowAtIndex(unsigned long) const [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+  9,680,846 ( 0.35%)  ???:std::_Vector_base<double, std::allocator<double> >::_Vector_impl::~_Vector_impl() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+  8,989,357 ( 0.32%)  ???:std::_Vector_base<double, std::allocator<double> >::_Vector_impl_data::_Vector_impl_data() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+  8,983,969 ( 0.32%)  ./string/../sysdeps/x86_64/multiarch/strcmp-avx2.S:__strcmp_avx2 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  7,606,379 ( 0.27%)  ???:std::_Vector_base<double, std::allocator<double> >::_Vector_base() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+  7,606,379 ( 0.27%)  ???:std::vector<double, std::allocator<double> >::vector() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+  5,531,912 ( 0.20%)  ???:void std::_Destroy<double*>(double*, double*) [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+  5,368,419 ( 0.19%)  ???:0x000000000000bd20 [/usr/lib/x86_64-linux-gnu/libucm.so.0.0.0]
+  5,156,059 ( 0.19%)  ./elf/./elf/dl-lookup.c:do_lookup_x [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+  4,840,423 ( 0.17%)  ???:std::__new_allocator<double>::~__new_allocator() [/home/sebasarce/Documents/GitHub/heat-transfer-openmp-mpi/bin/heat-transfer-openmp-mpi]
+  4,151,945 ( 0.15%)  ???:0x0000000004cef320 [???]
+  4,151,903 ( 0.15%)  ???:0x0000000004cefda0 [???]
+  4,151,899 ( 0.15%)  ???:0x0000000004cef540 [???]
+  4,151,894 ( 0.15%)  ???:operator delete(void*) [/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.35]
+  4,151,868 ( 0.15%)  ???:operator delete(void*, unsigned long) [/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.35]
+  4,150,798 ( 0.15%)  ???:0x0000000004004690 [???]
+  4,149,008 ( 0.15%)  ???:0x00000000040046a0 [???]
+  3,980,094 ( 0.14%)  ???:0x000000000016d150 [/usr/lib/x86_64-linux-gnu/pmix2/lib/libpmix.so.2.13.9]
+  3,518,120 ( 0.13%)  ???:0x000000000000b9c0 [/usr/lib/x86_64-linux-gnu/libucm.so.0.0.0]
+  3,492,983 ( 0.13%)  ./stdlib/./stdlib/getenv.c:getenv [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  3,208,525 ( 0.12%)  ./malloc/./malloc/malloc.c:_int_malloc [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  2,768,016 ( 0.10%)  ???:0x0000000004004660 [???]
+  2,074,464 ( 0.07%)  ./math/../sysdeps/ieee754/dbl-64/math_config.h:__ieee754_pow_fma
+  1,921,556 ( 0.07%)  ./malloc/./malloc/malloc.c:_int_free_merge_chunk [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  1,895,962 ( 0.07%)  ./string/../sysdeps/x86_64/multiarch/strcmp-avx2.S:__strncmp_avx2 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  1,382,976 ( 0.05%)  ???:0x00000000040048b0 [???]
+  1,382,976 ( 0.05%)  ???:0x0000000004ef9510 [???]
+  1,279,328 ( 0.05%)  ./elf/../sysdeps/generic/dl-new-hash.h:_dl_lookup_symbol_x
+  1,135,497 ( 0.04%)  ./string/../sysdeps/x86_64/multiarch/../multiarch/strcmp-sse2.S:strcmp [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+  1,117,328 ( 0.04%)  ???:0x000000000013cdd0 [/usr/lib/x86_64-linux-gnu/pmix2/lib/libpmix.so.2.13.9]
+  1,093,888 ( 0.04%)  ./debug/./debug/strncat_chk.c:__strncat_chk [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    907,739 ( 0.03%)  ???:0x00000000001ac6a0 [/usr/lib/x86_64-linux-gnu/pmix2/lib/libpmix.so.2.13.9]
+    812,952 ( 0.03%)  ./string/../sysdeps/x86_64/multiarch/strlen-avx2.S:__strlen_avx2 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    790,828 ( 0.03%)  ./malloc/./malloc/malloc.c:__libc_malloc2 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+
